@@ -23,7 +23,7 @@ export const addNote = async (req, res) => {
       public_id: `${Date.now()}-${title.replace(/\s+/g, "_")}`,
     });
 
-    const pdfUrl = result.secure_url;
+    const pdfUrl = result.secure_url.replace("/raw/upload/", "/image/upload/");
 
     const note = await Note.create({
       title,
