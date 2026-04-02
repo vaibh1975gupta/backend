@@ -1,4 +1,6 @@
+import fs from "fs";
 import Note from "../models/Note.js";
+import cloudinary from "../config/cloudinary.js";
 
 export const addNote = async (req, res) => {
   try {
@@ -15,7 +17,13 @@ export const addNote = async (req, res) => {
       return res.status(400).json({ message: "PDF file is required" });
     }
 
-    const pdfUrl = req.file.path || req.file.secure_url;
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      resource_type: "raw",
+      folder: "college_notes_pdfs",
+      public_id: `${Date.now()}-${title.replace(/\s+/g, "_")}`,
+    });
+
+    const pdfUrl = result.secure_url;
 
     const note = await Note.create({
       title,
@@ -25,6 +33,10 @@ export const addNote = async (req, res) => {
       pdfUrl,
       uploadedBy: req.user._id,
     });
+
+    if (fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
 
     res.status(201).json({
       message: "Note added successfully",
