@@ -2,6 +2,9 @@ import Note from "../models/Note.js";
 
 export const addNote = async (req, res) => {
   try {
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
+
     const { title, subject, branch, semester } = req.body;
 
     if (!title || !subject || !branch || !semester) {
@@ -28,6 +31,7 @@ export const addNote = async (req, res) => {
       note,
     });
   } catch (error) {
+    console.log("ERROR:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -44,6 +48,7 @@ export const getNotes = async (req, res) => {
 
     res.json(notes);
   } catch (error) {
+    console.log("ERROR:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -59,6 +64,7 @@ export const deleteNote = async (req, res) => {
     await note.deleteOne();
     res.json({ message: "Note deleted successfully" });
   } catch (error) {
+    console.log("ERROR:", error);
     res.status(500).json({ message: error.message });
   }
 };
