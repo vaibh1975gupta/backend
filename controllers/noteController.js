@@ -15,7 +15,7 @@ export const addNote = async (req, res) => {
       return res.status(400).json({ message: "PDF file is required" });
     }
 
-    const pdfUrl = `https://backend-llez.onrender.com/uploads/${req.file.filename}`;
+    const pdfUrl = req.file.path || req.file.secure_url;
 
     const note = await Note.create({
       title,
