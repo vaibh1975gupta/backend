@@ -4,7 +4,7 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import noteRoutes from "./routes/noteRoutes.js";
-
+import videoRoutes from "./routes/videoRoutes.js";
 dotenv.config();
 connectDB();
 
@@ -12,7 +12,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-
+app.use("/api/videos", videoRoutes);
 app.get("/", (req, res) => {
   res.send("College LMS API is running");
 });
