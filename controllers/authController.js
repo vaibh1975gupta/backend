@@ -2,21 +2,37 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+const generateToken = (user) => {
+  return jwt.sign(
+    {
+      id: user._id,
+      role: user.role,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
+  );
 };
 
-export const signupUser = async (req, res) => {
+export const registerUser = async (req, res) => {
   try {
-    const { name, email, password, branch, semester } = req.body;
+    const {
+      name,
+      email,
+      password,
+      role,
+      branch,
+      semester,
+      enrollmentNo,
+      childId,
+    } = req.body;
 
-    if (!name || !email || !password || !branch || !semester) {
-      return res.status(400).json({ message: "All fields are required" });
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "Name, email and password are required" });
     }
 
-    const userExists = await User.findOne({ email });
+    const existingUser = await User.findOne({ email });
 
-    if (userExists) {
+    if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
@@ -26,21 +42,27 @@ export const signupUser = async (req, res) => {
       name,
       email,
       password: hashedPassword,
+      role: role || "student",
       branch,
       semester,
-      role: "student",
+      enrollmentNo,
+      childId: childId || null,
     });
 
+    const token = generateToken(user);
+
     res.status(201).json({
-      message: "Signup successful",
-      token: generateToken(user._id),
+      message: "User registered successfully",
+      token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role,
         branch: user.branch,
         semester: user.semester,
-        role: user.role,
+        enrollmentNo: user.enrollmentNo,
+        childId: user.childId,
       },
     });
   } catch (error) {
@@ -53,33 +75,79 @@ export const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: "Email and password required" });
+      return res.status(400).json({ message: "Email and password are required" });
     }
 
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatched = await bcrypt.compare(password, user.password);
 
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
+    if (!isMatched) {
+      return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    res.json({
+    const token = generateToken(user);
+
+    res.status(200).json({
       message: "Login successful",
-      token: generateToken(user._id),
+      token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role,
         branch: user.branch,
         semester: user.semester,
-        role: user.role,
+        enrollmentNo: user.enrollmentNo,
+        childId: user.childId,
       },
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getProfile = async (req, res) => {
+  try {
+    res.status(200).json({
+      user: req.user,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const adminOnly = async (req, res) => {
+  try {
+    res.status(200).json({ message: "Welcome Admin" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const teacherOnly = async (req, res) => {
+  try {
+    res.status(200).json({ message: "Welcome Teacher" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const studentOnly = async (req, res) => {
+  try {
+    res.status(200).json({ message: "Welcome Student" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const parentOnly = async (req, res) => {
+  try {
+    res.status(200).json({ message: "Welcome Parent" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
